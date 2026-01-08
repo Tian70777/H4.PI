@@ -16,40 +16,47 @@ router.post('/webhook', async (req, res) => {
     
     console.log('📝 Changed files:', changedFiles);
 
-    // Pull latest code
-    await pullCode();
-
-    // Check if frontend files changed
-    const frontendChanged = changedFiles.some(f => f.startsWith('dashboard/'));
-    if (frontendChanged) {
-      console.log('🎨 Frontend files changed, rebuilding...');
-      await rebuildFrontend();
-    }
-
-    // Check if backend files changed
-    const backendChanged = changedFiles.some(f => f.startsWith('server/'));
-    if (backendChanged) {
-      console.log('⚙️ Backend files changed, restarting...');
-      await restartBackend();
-    }
-
-    if (!frontendChanged && !backendChanged) {
-      console.log('📄 Only documentation/config changed, no rebuild needed');
-    }
-
-    res.status(200).json({ 
+    // Respond to GitHub immediately (within 10 seconds)
+    res.status(202).json({ 
       success: true, 
-      message: 'Deployment completed',
-      frontendRebuilt: frontendChanged,
-      backendRestarted: backendChanged
+      message: 'Deployment started'
     });
+
+    // Deploy in background (don't wait for GitHub)
+    (async () => {
+      try {
+        // Pull latest code
+        await pullCode();
+
+        // Check if frontend files changed
+        const frontendChanged = changedFiles.some(f => f.startsWith('dashboard/'));
+        if (frontendChanged) {
+          console.log('🎨 Frontend files changed, rebuilding...');
+          await rebuildFrontend();
+          console.log('✅ Frontend rebuild complete');
+        }
+
+        // Check if backend files changed
+        const backendChanged = changedFiles.some(f => f.startsWith('server/'));
+        if (backendChanged) {
+          console.log('⚙️ Backend files changed, restarting...');
+          await restartBackend();
+          console.log('✅ Backend restart complete');
+        }
+
+        if (!frontendChanged && !backendChanged) {
+          console.log('📄 Only documentation/config changed, no rebuild needed');
+        }
+
+        console.log('🎉 Deployment completed successfully!');
+      } catch (error) {
+        console.error('❌ Background deployment failed:', error);
+      }
+    })();
 
   } catch (error) {
-    console.error('❌ Webhook deployment failed:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    console.error('❌ Webhook failed:', error);
+    // Response already sent, just log the error
   }
 });
 

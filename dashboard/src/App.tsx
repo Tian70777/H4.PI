@@ -98,7 +98,7 @@ function App() {
         </div>
         <p>
           Real-time data from Raspberry Pi via WebSocket. 
-          Updates every 2 seconds automatically. check!
+          Updates every 2 seconds automatically. check check!
         </p>
       </div>
     </div>
