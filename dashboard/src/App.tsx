@@ -36,7 +36,8 @@ function App() {
       setData(receivedData);
     });
 
-    // Handle disconnection
+    // Handle disconnectionxinjiaPo220789
+    
     socket.on('disconnect', () => {
       console.log('Disconnected from server');
       setConnected(false);
@@ -97,7 +98,7 @@ function App() {
         </div>
         <p>
           Real-time data from Raspberry Pi via WebSocket. 
-          Updates every 2 seconds automatically.
+          Updates every 2 seconds automatically. Test for auto deployment!
         </p>
       </div>
     </div>
