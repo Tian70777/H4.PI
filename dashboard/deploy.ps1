@@ -1,5 +1,9 @@
 # Deploy Script for Raspberry Pi Dashboard
-# Uses Git + Tailscale for seamless deployment from anywhere
+# Uses SSH key for passwordless deployment
+
+# SSH key path
+$SSH_KEY = "$env:USERPROFILE\.ssh\id_ed25519_pi"
+$PI_HOST = "tian@100.82.69.79"
 
 Write-Host "===================================" -ForegroundColor Cyan
 Write-Host "  Deploying to Raspberry Pi" -ForegroundColor Cyan
@@ -33,25 +37,25 @@ Write-Host ""
 Write-Host "[3/4] Deploying to Pi (100.82.69.79 via Tailscale)..." -ForegroundColor Yellow
 
 # Option A: Using Git (recommended)
-# ssh tian@100.82.69.79 "cd ~/pi-dashboard && git pull && cd dashboard && npm run build && sudo cp -r dist/* /var/www/html/ && sudo chmod -R 755 /var/www/html"
+# ssh -i $SSH_KEY $PI_HOST "cd ~/pi-dashboard && git pull && cd dashboard && npm run build && sudo cp -r dist/* /var/www/html/ && sudo chmod -R 755 /var/www/html"
 
-# Option B: Using SCP (works without Git)
-scp -r dist/* tian@100.82.69.79:/var/www/html/
+# Option B: Using SCP (works without Git) - NO PASSWORD!
+scp -i $SSH_KEY -r dist/* "${PI_HOST}:/var/www/html/"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Deployment failed! Check Tailscale connection." -ForegroundColor Red
     exit 1
 }
 
-# Fix permissions
-ssh tian@100.82.69.79 "chmod -R 755 /var/www/html"
+# Fix permissions - NO PASSWORD!
+ssh -i $SSH_KEY $PI_HOST "chmod -R 755 /var/www/html"
 
 Write-Host "Files deployed and permissions fixed!" -ForegroundColor Green
 Write-Host ""
 
 # Step 4: Restart backend if needed
 Write-Host "[4/4] Restarting services..." -ForegroundColor Yellow
-ssh tian@100.82.69.79 "cd ~/server && pm2 restart server" 2>$null
+ssh -i $SSH_KEY $PI_HOST "cd ~/server && pm2 restart server" 2>$null
 Write-Host "Services restarted (if configured)" -ForegroundColor Green
 Write-Host ""
 
