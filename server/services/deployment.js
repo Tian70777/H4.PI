@@ -21,7 +21,7 @@ async function pullCode() {
 async function rebuildFrontend() {
   console.log('🔨 Rebuilding frontend...');
   const { stdout, stderr } = await execPromise(
-    'cd /home/tian/H4.PI/dashboard && npm run build && sudo cp -r dist/* /var/www/html/'
+    'cd /home/tian/H4.PI/dashboard && npm run build && cp -r dist/* /var/www/html/'
   );
   console.log('✅ Frontend rebuilt successfully');
   return { stdout, stderr };
