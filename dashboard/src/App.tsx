@@ -21,6 +21,14 @@ interface ArduinoData {
     ip?: string;
 }
 
+interface CatDetection {
+  id: number;
+  timestamp: string;
+  isHana: boolean;
+  confidence: number;
+  photoUrl: string;
+}
+
 // Auto-detect the Pi's address from the current URL
 // Works with IP addresses (10.101.40.181) or hostnames (tianserver01.local)
 // Falls back to localhost for local development
@@ -33,6 +41,7 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [activeTab, setActiveTab] = useState<'server' | 'arduino'>('server');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [catDetections, setCatDetections] = useState<CatDetection[]>([]);
 
   useEffect(() => {
     // Create WebSocket connection to server
@@ -54,6 +63,12 @@ function App() {
         console.log('Received Arduino status:', status);
         setArduinoData(status);
         setArduinoLastUpdate(new Date());
+    });
+
+    // Listen for 'cat-detection' event from server (motion detection)
+    socket.on('cat-detection', (detection: CatDetection) => {
+        console.log('Cat detection:', detection);
+        setCatDetections(prev => [detection, ...prev].slice(0, 10)); // Keep last 10
     });
 
     // Handle disconnection
@@ -95,8 +110,12 @@ function App() {
         {activeTab === 'server' ? (
           <ServerView data={data} />
         ) : (
-          <ArduinoView data={arduinoData} lastUpdate={arduinoLastUpdate} />
+          <ArduinoView data={arduinoData} lastUpdate={arduinoLastUpdate} detections={catDetections} />
         )}
+
+        <div className="info-box">
+          <p>Real-time data via WebSocket. Updates every 2 seconds automatically. check check check!</p>
+        </div>
       </div>
 
       <div className="info-box">

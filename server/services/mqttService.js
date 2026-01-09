@@ -1,4 +1,5 @@
 const mqtt = require('mqtt');
+const path = require('path');
 const { capturePhoto } = require('./cameraService');
 const { analyzeCat } = require('./catDetectionService');
 const { saveDetection } = require('./databaseService');

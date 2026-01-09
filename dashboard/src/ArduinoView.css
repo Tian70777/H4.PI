@@ -164,3 +164,93 @@
   color: #ff00ff;
   margin-right: 10px;
 }
+
+/* Detection Gallery */
+.detection-gallery {
+  margin-top: 30px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #00ffff;
+  padding: 25px;
+  border-radius: 5px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+}
+
+.detection-gallery h3 {
+  color: #00ffff;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px #00ffff;
+}
+
+.no-detections {
+  color: #33ff0099;
+  font-size: 1.1em;
+  text-align: center;
+  padding: 30px;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.photo-card {
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #00ffff;
+  border-radius: 5px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.photo-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+}
+
+.detection-photo {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-info {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cat-label {
+  font-size: 1.2em;
+  font-weight: bold;
+  padding: 5px 10px;
+  border-radius: 3px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.cat-label.is-hana {
+  background: rgba(51, 255, 0, 0.2);
+  border: 1px solid #33ff00;
+  color: #33ff00;
+}
+
+.cat-label.not-hana {
+  background: rgba(255, 165, 0, 0.2);
+  border: 1px solid #ffa500;
+  color: #ffa500;
+}
+
+.confidence {
+  color: #ff00ff;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.timestamp {
+  color: #33ff0099;
+  font-size: 0.85em;
+}

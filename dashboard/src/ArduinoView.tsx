@@ -10,12 +10,22 @@ interface ArduinoData {
   active?: boolean;
 }
 
+interface CatDetection {
+  id: number;
+  timestamp: string;
+  isHana: boolean;
+  confidence: number;
+  photoUrl: string;
+}
+
 interface Props {
   data: ArduinoData | null;
   lastUpdate: Date | null;
+  detections: CatDetection[];
 }
 
-const ArduinoView: React.FC<Props> = ({ data, lastUpdate }) => {
+const ArduinoView: React.FC<Props> = ({ data, lastUpdate, detections }) => {
+  const SOCKET_URL = `http://${window.location.hostname || 'localhost'}:5000`;
   if (!data) {
     return (
       <div className="view-container">
@@ -110,6 +120,32 @@ const ArduinoView: React.FC<Props> = ({ data, lastUpdate }) => {
           <li><strong>Cooldown:</strong> 5 seconds</li>
           <li><strong>Heartbeat:</strong> Every 30 seconds</li>
         </ul>
+      </div>
+
+      <div className="detection-gallery">
+        <h3>Recent Detections</h3>
+        {detections.length === 0 ? (
+          <p className="no-detections">No motion detected yet. Wave at the sensor!</p>
+        ) : (
+          <div className="photo-grid">
+            {detections.map((detection) => (
+              <div key={detection.id} className="photo-card">
+                <img 
+                  src={`${SOCKET_URL}${detection.photoUrl}`} 
+                  alt={`Detection ${detection.id}`}
+                  className="detection-photo"
+                />
+                <div className="photo-info">
+                  <span className={`cat-label ${detection.isHana ? 'is-hana' : 'not-hana'}`}>
+                    {detection.isHana ? '🐱 Hana!' : '❓ Unknown'}
+                  </span>
+                  <span className="confidence">{(detection.confidence * 100).toFixed(1)}%</span>
+                  <span className="timestamp">{new Date(detection.timestamp).toLocaleString()}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
