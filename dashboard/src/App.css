@@ -21,12 +21,12 @@ body {
 }
 
 #root {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
+  margin: 0;
+  padding: 0;
   text-align: center;
   position: relative;
   z-index: 1;
+  min-height: 100vh;
 }
 
 /* Scanline effect */
@@ -50,18 +50,58 @@ body {
 }
 
 .dashboard {
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+}
+
+.main-content {
+  flex: 1;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.sidebar-open {
+  margin-left: 250px;
+}
+
+.main-content.sidebar-closed {
+  margin-left: 0;
+}
+
+.sidebar-toggle-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid #33ff00;
+  color: #33ff00;
+  font-size: 1.5em;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(51, 255, 0, 0.3);
+}
+
+.sidebar-toggle-btn:hover {
+  background: rgba(51, 255, 0, 0.1);
+  box-shadow: 0 0 30px rgba(51, 255, 0, 0.5);
+  transform: scale(1.1);
 }
 
 .header {
+  text-align: center;
+  padding: 40px 20px;
   border-bottom: 2px solid var(--neon-cyan);
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  position: relative;
+  background: rgba(0, 0, 0, 0.8);
 }
 
 .header h1 {
@@ -71,11 +111,14 @@ body {
   text-shadow: 0 0 10px var(--neon-cyan), 0 0 20px var(--neon-cyan);
 }
 
-.uptime {
-  color: var(--neon-pink);
-  font-size: 1rem;
-  margin-top: 0.5rem;
-  text-shadow: 0 0 5px var(--neon-pink);
+.connection-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 1.2em;
+  color: #33ff00;
+  margin-top: 15px;
 }
 
 .grid {
@@ -152,10 +195,12 @@ body {
 .info-box {
   margin-top: 2rem;
   padding: 1.5rem;
-  background-color: rgba(255, 0, 255, 0.05);
-  border: 1px solid var(--neon-pink);
+  background: rgba(0, 0, 0, 0.9);
+  border: 2px solid var(--neon-cyan);
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
   text-align: left;
-  position: relative;
+  margin-bottom: 2rem;
 }
 
 .info-box h3 {

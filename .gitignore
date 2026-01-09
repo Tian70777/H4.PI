@@ -25,3 +25,18 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+
+# Database files (contains user data)
+data/*.db
+data/*.db-journal
+data/*.sqlite
+data/*.sqlite3
+
+# Photos (too large for Git)
+*.jpg
+*.jpeg
+*.png
+cat_photos/
+
+# Arduino credentials (private WiFi passwords)
+Arduino/**/config.h

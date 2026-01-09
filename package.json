@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.2.1",
+    "mqtt": "^5.14.1",
+    "socket.io": "^4.8.3",
+    "sqlite3": "^5.1.7",
+    "systeminformation": "^5.30.2"
+  }
+}

@@ -15,14 +15,26 @@ async function getSystemStats() {
       si.networkInterfaces()
     ]);
 
-    // Find the first non-internal network interface (usually eth0 or wlan0)
-    const ip = Array.isArray(network) 
-      ? network.find(iface => !iface.internal && iface.ip4)?.ip4 
-      : 'Unknown';
+    // Find the first non-internal network interface, prefer local network (192.168.x.x) over VPN
+    let ip = 'Unknown';
+    if (Array.isArray(network)) {
+      // First try to find local network IP (192.168.x.x or 10.x.x.x)
+      const localIface = network.find(iface => 
+        !iface.internal && iface.ip4 && 
+        (iface.ip4.startsWith('192.168.') || iface.ip4.startsWith('10.'))
+      );
+      
+      if (localIface) {
+        ip = localIface.ip4;
+      } else {
+        // Fall back to any non-internal interface
+        ip = network.find(iface => !iface.internal && iface.ip4)?.ip4 || 'Unknown';
+      }
+    }
 
     return {
       load: cpuLoad.currentLoad.toFixed(1), // CPU Load %
-      temperature: cpuTemp.main.toFixed(1), // CPU Temp in C
+      temperature: cpuTemp.main !== null ? cpuTemp.main.toFixed(1) : 'N/A', // CPU Temp in C (null on Windows)
       memoryUsage: ((mem.active / mem.total) * 100).toFixed(1), // Memory Used %
       totalMemory: (mem.total / 1024 / 1024 / 1024).toFixed(2) + "GB", // Total GB
       ipAddress: ip || "Unknown",

@@ -2,16 +2,22 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const path = require('path');
 
 // Import modular components
 const webhookRouter = require('./routes/webhook');
 const apiRouter = require('./routes/api');
 const { initializeStatsSocket } = require('./websocket/statsSocket');
+const { initializeMQTT } = require('./services/mqttService');
+const { initializeDatabase } = require('./services/databaseService');
 
 // Setup Express app
 const app = express();
 app.use(cors()); // Allow connections from other devices
 app.use(express.json()); // Parse JSON request bodies
+
+// Serve cat photos
+app.use('/cat-photos', express.static('/home/tian/cat_photos'));
 
 const server = http.createServer(app);
 
@@ -31,6 +37,16 @@ app.use('/api', apiRouter);     // Health check, stats API
 
 // Initialize WebSocket for real-time stats
 initializeStatsSocket(io);
+
+// Initialize Database
+initializeDatabase().then(() => {
+  console.log('✅ Database ready');
+}).catch(err => {
+  console.error('❌ Database initialization failed:', err);
+});
+
+// Initialize MQTT (cat detection)
+initializeMQTT(io);
 
 // Start the server
 server.listen(PORT, '0.0.0.0', () => {

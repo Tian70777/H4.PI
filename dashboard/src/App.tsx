@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { io } from 'socket.io-client'
 import './App.css'
+import Sidebar from './Sidebar';
+import ServerView from './ServerView';
+import ArduinoView from './ArduinoView';
 
 interface SystemData {
   load: string;
@@ -11,6 +14,13 @@ interface SystemData {
   uptime: string;
 }
 
+interface ArduinoData {
+    msg: string;
+    uptime: number;
+    wifi_rssi?: number;
+    ip?: string;
+}
+
 // Auto-detect the Pi's address from the current URL
 // Works with IP addresses (10.101.40.181) or hostnames (tianserver01.local)
 // Falls back to localhost for local development
@@ -18,7 +28,11 @@ const SOCKET_URL = `http://${window.location.hostname || 'localhost'}:5000`;
 
 function App() {
   const [data, setData] = useState<SystemData | null>(null);
+  const [arduinoData, setArduinoData] = useState<ArduinoData | null>(null);
+  const [arduinoLastUpdate, setArduinoLastUpdate] = useState<Date | null>(null);
   const [connected, setConnected] = useState(false);
+  const [activeTab, setActiveTab] = useState<'server' | 'arduino'>('server');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     // Create WebSocket connection to server
@@ -30,14 +44,19 @@ function App() {
       setConnected(true);
     });
 
-    // Listen for 'stats' event from server
+    // Listen for 'stats' event from server (Pi System)
     socket.on('stats', (receivedData: SystemData) => {
-      console.log('Received stats:', receivedData);
       setData(receivedData);
     });
 
-    // Handle disconnectionxinjiaPo220789
-    
+    // Listen for 'arduino-status' event from server (Arduino via MQTT)
+    socket.on('arduino-status', (status: ArduinoData) => {
+        console.log('Received Arduino status:', status);
+        setArduinoData(status);
+        setArduinoLastUpdate(new Date());
+    });
+
+    // Handle disconnection
     socket.on('disconnect', () => {
       console.log('Disconnected from server');
       setConnected(false);
@@ -49,55 +68,40 @@ function App() {
     };
   }, []);
 
-  if (!data) {
-    return (
-      <div className="loading">
-        {connected ? 'Waiting for data...' : 'Connecting to Pi...'}
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard">
       <div className="scanlines"></div>
-      <header className="header">
-        <h1>Raspberry Pi Dashboard</h1>
-        <p className="uptime">Last Updated: {data.uptime}</p>
-      </header>
+      {!sidebarOpen && (
+        <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(true)}>
+          ☰
+        </button>
+      )}
+      <Sidebar 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+      
+      <div className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+        <header className="header">
+          <h1>IoT Monitoring Dashboard</h1>
+          <div className="connection-status">
+            <span className={connected ? 'status-dot connected' : 'status-dot disconnected'}></span>
+            <span>{connected ? 'Server Online' : 'Server Offline'}</span>
+          </div>
+        </header>
 
-      <div className="grid">
-        <div className="card">
-          <h2>System Load</h2>
-          <div className="value">{data.load}%</div>
-          <div className="label">CPU Usage</div>
-        </div>
-
-        <div className="card">
-          <h2>Temperature</h2>
-          <div className="value">{data.temperature}°C</div>
-          <div className="label">CPU Temp</div>
-        </div>
-
-        <div className="card">
-          <h2>Memory Usage</h2>
-          <div className="value">{data.memoryUsage}%</div>
-          <div className="label">of {data.totalMemory}</div>
-        </div>
-
-        <div className="card">
-          <h2>Network</h2>
-          <div className="value ip">{data.ipAddress}</div>
-          <div className="label">IP Address</div>
-        </div>
+        {activeTab === 'server' ? (
+          <ServerView data={data} />
+        ) : (
+          <ArduinoView data={arduinoData} lastUpdate={arduinoLastUpdate} />
+        )}
       </div>
 
       <div className="info-box">
-        <div className="status-indicator">
-          <span className={connected ? 'status-dot connected' : 'status-dot disconnected'}></span>
-          {connected ? 'Connected to Pi' : 'Disconnected'}
-        </div>
         <p>
-          Real-time data from Raspberry Pi via WebSocket. 
+          Real-time data via WebSocket. 
           Updates every 2 seconds automatically. check check check!
         </p>
       </div>
