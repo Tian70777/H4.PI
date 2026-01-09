@@ -112,17 +112,6 @@ function App() {
         ) : (
           <ArduinoView data={arduinoData} lastUpdate={arduinoLastUpdate} detections={catDetections} />
         )}
-
-        <div className="info-box">
-          <p>Real-time data via WebSocket. Updates every 2 seconds automatically. check check check!</p>
-        </div>
-      </div>
-
-      <div className="info-box">
-        <p>
-          Real-time data via WebSocket. 
-          Updates every 2 seconds automatically. check check check!
-        </p>
       </div>
     </div>
   )
