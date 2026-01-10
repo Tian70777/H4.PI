@@ -45,7 +45,10 @@ const ArduinoView: React.FC<Props> = ({ data, lastUpdate, detections }) => {
   }
 
   const isOnline = lastUpdate && (Date.now() - lastUpdate.getTime() < 60000);
-  const uptimeMinutes = Math.floor(data.uptime / 60);
+  
+  // Fix NaN issue - ensure uptime is a valid number
+  const uptimeSeconds = typeof data.uptime === 'number' && !isNaN(data.uptime) ? data.uptime : 0;
+  const uptimeMinutes = Math.floor(uptimeSeconds / 60);
   const uptimeHours = Math.floor(uptimeMinutes / 60);
   const remainingMinutes = uptimeMinutes % 60;
 
@@ -70,7 +73,7 @@ const ArduinoView: React.FC<Props> = ({ data, lastUpdate, detections }) => {
             {uptimeHours > 0 && <><span className="time-value">{uptimeHours}</span>h </>}
             <span className="time-value">{remainingMinutes}</span>m
           </div>
-          <p className="status-info">{data.uptime}s total</p>
+          <p className="status-info">{uptimeSeconds}s total</p>
         </div>
 
         {data.wifi_rssi && (

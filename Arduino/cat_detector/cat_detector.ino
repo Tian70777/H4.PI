@@ -60,23 +60,33 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentMillis = millis();
+  
+  // Check WiFi connection first (most critical)
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("⚠️ WiFi lost! Reconnecting...");
+    digitalWrite(LED_PIN, HIGH); // LED on during reconnect
+    connectToWiFi(WIFI_HOME_SSID, WIFI_HOME_PASS);
+    digitalWrite(LED_PIN, LOW);
+    
+    // After WiFi reconnects, reconnect MQTT
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.println("✅ WiFi reconnected! Reconnecting MQTT...");
+      connectToMQTT("HanaCatDetector");
+    }
+  }
+  
   // Maintain MQTT connection
   if (!mqttClient.connected()) {
-    reconnectMQTT(nullptr);  // No control topic needed
+    Serial.println("⚠️ MQTT lost! Reconnecting...");
+    reconnectMQTT(nullptr);
   }
   mqttClient.loop();
   
   // Periodic Status Update (Heartbeat)
-  unsigned long currentMillis = millis();
   if (currentMillis - lastStatusTime >= STATUS_INTERVAL) {
     lastStatusTime = currentMillis;
     sendStatus("Heartbeat - System Active");
-  }
-
-  // Check WiFi
-  if (!isWiFiConnected()) {
-    Serial.println("WiFi lost! Reconnecting...");
-    connectToWiFi(WIFI_HOME_SSID, WIFI_HOME_PASS);
   }
   
   // Read PIR sensor
