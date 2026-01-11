@@ -45,7 +45,7 @@ function initializeMQTT(io) {
       // Log Arduino status (replaces Serial.println when Arduino is deployed)
       try {
         const status = JSON.parse(message.toString());
-        console.log(`🤖 Arduino: ${status.msg} (uptime: ${status.uptime}s)`);
+        console.log(`🤖 Arduino: ${status.message} (RSSI: ${status.wifi_rssi} dBm, IP: ${status.ip})`);
         
         // Forward to Dashboard via WebSocket
         io.emit('arduino-status', status);
