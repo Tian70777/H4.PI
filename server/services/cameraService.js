@@ -9,7 +9,11 @@ const fs = require('fs').promises;
  * @returns {Promise<string>} Path to captured photo
  */
 async function capturePhoto() {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  // Format timestamp in local timezone (Denmark = UTC+1)
+  const now = new Date();
+  const timestamp = new Date(now.getTime() - (now.getTimezoneOffset() * 60000))
+    .toISOString()
+    .replace(/[:.]/g, '-');
   const filename = `cat_${timestamp}.jpg`;
   const photoDir = '/home/tian/cat_photos';
   const photoPath = path.join(photoDir, filename);

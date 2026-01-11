@@ -4,6 +4,13 @@
 #include <WiFiS3.h>
 #include "config.h"
 
+// Define Static IP settings
+// This ensures the device always uses 192.168.0.66 so you can ping it
+IPAddress local_IP(192, 168, 0, 66);
+IPAddress dns(8, 8, 8, 8);             // Google DNS
+IPAddress gateway(192, 168, 0, 1);
+IPAddress subnet(255, 255, 255, 0);
+
 bool connectToWiFi(const char* ssid, const char* pass) {
   Serial.print("Connecting to WiFi: ");
   Serial.println(ssid);
@@ -13,10 +20,20 @@ bool connectToWiFi(const char* ssid, const char* pass) {
     return false;
   }
 
+  // Disconnect any previous connection attempts
+  WiFi.disconnect();
+  delay(100);
+
+  // Configuration for Static IP (Respects order: IP, DNS, Gateway, Subnet)
+  WiFi.config(local_IP, dns, gateway, subnet);
+
+  // Start connection - call begin() only ONCE
+  WiFi.begin(ssid, pass);
+  
+  // Wait for connection to establish
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 5) {
-    WiFi.begin(ssid, pass);
-    delay(5000);
+  while (WiFi.status() != WL_CONNECTED && attempts < 20) { // Wait up to 10 seconds (20*500ms)
+    delay(500);
     Serial.print(".");
     attempts++;
   }

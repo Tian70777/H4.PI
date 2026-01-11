@@ -29,15 +29,11 @@ void setup() {
   
   // Connect to WiFi
   if (!connectToWiFi(WIFI_HOME_SSID, WIFI_HOME_PASS)) {
-    Serial.println("❌ WiFi failed! Check credentials in config.h");
-    // Fast blink = WiFi error (can see this at home)
-    while(1) {
-      digitalWrite(LED_PIN, !digitalRead(LED_PIN));
-      delay(200);
-    }
+    Serial.println("❌ WiFi failed initially! Will retry in loop...");
+    // Don't freeze here, let the loop() handle reconnection
+  } else {
+    blinkLED(2);  // 2 blinks = WiFi connected
   }
-  
-  blinkLED(2);  // 2 blinks = WiFi connected
   
   // Setup MQTT
   mqttClient.setServer(MQTT_SERVER, MQTT_PORT);
@@ -72,7 +68,9 @@ void loop() {
     // After WiFi reconnects, reconnect MQTT
     if (WiFi.status() == WL_CONNECTED) {
       Serial.println("✅ WiFi reconnected! Reconnecting MQTT...");
-      connectToMQTT("HanaCatDetector");
+      if (connectToMQTT("HanaCatDetector")) {
+        sendStatus("WiFi Reconnected - Online");
+      }
     }
   }
   
