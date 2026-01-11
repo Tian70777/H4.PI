@@ -39,3 +39,24 @@
   margin-top: 10px;
   text-align: right;
 }
+
+/* WiFi Signal Quality Colors */
+.signal-excellent {
+  color: #00ff00 !important;
+}
+
+.signal-good {
+  color: #7fff00 !important;
+}
+
+.signal-fair {
+  color: #ffff00 !important;
+}
+
+.signal-weak {
+  color: #ff8800 !important;
+}
+
+.signal-very-weak {
+  color: #ff3333 !important;
+}

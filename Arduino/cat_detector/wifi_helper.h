@@ -24,7 +24,7 @@ bool connectToWiFi(const char* ssid, const char* pass) {
   WiFi.disconnect();
   delay(100);
 
-  // Configuration for Static IP (Respects order: IP, DNS, Gateway, Subnet)
+  // Enable Static IP for consistent address (.66)
   WiFi.config(local_IP, dns, gateway, subnet);
 
   // Start connection - call begin() only ONCE
@@ -32,7 +32,7 @@ bool connectToWiFi(const char* ssid, const char* pass) {
   
   // Wait for connection to establish
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) { // Wait up to 10 seconds (20*500ms)
+  while (WiFi.status() != WL_CONNECTED && attempts < 30) { // Wait up to 15 seconds
     delay(500);
     Serial.print(".");
     attempts++;
@@ -42,15 +42,50 @@ bool connectToWiFi(const char* ssid, const char* pass) {
     Serial.println("\nWiFi Connected!");
     Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
+    Serial.print("Gateway: ");
+    Serial.println(WiFi.gatewayIP());
+    
+    int rssi = WiFi.RSSI();
+    Serial.print("Signal Strength (RSSI): ");
+    Serial.print(rssi);
+    Serial.print(" dBm - ");
+    
+    // Signal quality indicator
+    if (rssi > -50) {
+      Serial.println("Excellent ✅");
+    } else if (rssi > -60) {
+      Serial.println("Good ✅");
+    } else if (rssi > -70) {
+      Serial.println("Fair ⚠️ (may disconnect)");
+    } else if (rssi > -80) {
+      Serial.println("Weak ⚠️ (unstable connection expected)");
+    } else {
+      Serial.println("Very Weak ❌ (likely to fail)");
+    }
+    
     return true;
   }
   
   Serial.println("\nWiFi Connection Failed.");
+  Serial.println("Possible causes:");
+  Serial.println("- Wrong WiFi password");
+  Serial.println("- WiFi signal too weak (move Arduino closer to router)");
+  Serial.println("- Router not responding");
   return false;
 }
 
 bool isWiFiConnected() {
-  return WiFi.status() == WL_CONNECTED;
+  if (WiFi.status() == WL_CONNECTED) {
+    int rssi = WiFi.RSSI();
+    // Warn if signal is degrading
+    if (rssi < -75) {
+      Serial.print("⚠️ Warning: Weak signal (");
+      Serial.print(rssi);
+      Serial.println(" dBm) - may disconnect soon!");
+    }
+    return true;
+  }
+  return false;
 }
 
 void blinkLED(int times) {

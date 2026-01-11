@@ -60,17 +60,25 @@ void loop() {
   
   // Check WiFi connection first (most critical)
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("⚠️ WiFi lost! Reconnecting...");
+    Serial.println("⚠️ WiFi lost! Reconnecting continuously until found...");
     digitalWrite(LED_PIN, HIGH); // LED on during reconnect
-    connectToWiFi(WIFI_HOME_SSID, WIFI_HOME_PASS);
+    
+    // Keep trying forever until WiFi is restored
+    while (WiFi.status() != WL_CONNECTED) {
+      Serial.print(".");
+      connectToWiFi(WIFI_HOME_SSID, WIFI_HOME_PASS);
+      
+      if (WiFi.status() != WL_CONNECTED) {
+        delay(5000); // Wait 5 seconds between retries
+      }
+    }
+    
     digitalWrite(LED_PIN, LOW);
+    Serial.println("\n✅ WiFi restored!");
     
     // After WiFi reconnects, reconnect MQTT
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("✅ WiFi reconnected! Reconnecting MQTT...");
-      if (connectToMQTT("HanaCatDetector")) {
-        sendStatus("WiFi Reconnected - Online");
-      }
+    if (connectToMQTT("HanaCatDetector")) {
+      sendStatus("WiFi Reconnected - Online");
     }
   }
   

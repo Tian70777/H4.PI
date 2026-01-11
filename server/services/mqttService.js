@@ -65,17 +65,17 @@ function initializeMQTT(io) {
  */
 async function handleMotionDetection(io) {
   try {
-    console.log('🐾 Motion detected! Capturing photo...');
+    console.log('🐾 Motion detected! Recording video...');
     
-    // Step 1: Capture photo
-    const photoPath = await capturePhoto();
+    // Step 1: Record 5-second video clip
+    const videoPath = await capturePhoto();  // Function name unchanged for compatibility
     
-    // Step 2: ANALYSIS DISABLED - Just collecting photos for training dataset
-    console.log('📷 Photo saved (analysis disabled, collecting training data)');
+    // Step 2: ANALYSIS DISABLED - Just collecting videos for training dataset
+    console.log('🎥 Video recorded (analysis disabled, collecting training data)');
     
     // Step 3: Save to database (without analysis)
     const detectionId = await saveDetection({
-      photoPath: photoPath,
+      photoPath: videoPath,  // Field name unchanged for DB compatibility
       isHana: null,  // Not analyzed yet
       confidence: 0,  // No confidence score
       colorFeatures: null
@@ -87,11 +87,11 @@ async function handleMotionDetection(io) {
       timestamp: new Date().toISOString(),
       isHana: null,
       confidence: 0,
-      photoUrl: `/cat-photos/${path.basename(photoPath)}`,
-      message: 'Photo captured (analysis disabled)'
+      photoUrl: `/cat-videos/${path.basename(videoPath)}`,
+      message: 'Video recorded (analysis disabled)'
     });
     
-    console.log(`✅ Photo saved: ${path.basename(photoPath)}`);
+    console.log(`✅ Video saved: ${path.basename(videoPath)}`);
     
   } catch (error) {
     console.error('❌ Motion detection workflow failed:', error);

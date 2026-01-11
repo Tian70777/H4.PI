@@ -13,6 +13,22 @@ interface Props {
   data: ArduinoData | null;
 }
 
+const getSignalQuality = (rssi: number): string => {
+  if (rssi > -50) return 'excellent';
+  if (rssi > -60) return 'good';
+  if (rssi > -70) return 'fair';
+  if (rssi > -80) return 'weak';
+  return 'very-weak';
+};
+
+const getSignalIcon = (rssi: number): string => {
+  if (rssi > -50) return '📶';
+  if (rssi > -60) return '📶';
+  if (rssi > -70) return '📡';
+  if (rssi > -80) return '⚠️';
+  return '❌';
+};
+
 const ArduinoStatus: React.FC<Props> = ({ data }) => {
   if (!data) {
     return (
@@ -47,7 +63,9 @@ const ArduinoStatus: React.FC<Props> = ({ data }) => {
         {data.wifi_rssi && (
             <div className="arduino-stat">
                 <span className="label">WiFi Signal</span>
-                <span className="value-sm">{data.wifi_rssi} dBm</span>
+                <span className={`value-sm signal-${getSignalQuality(data.wifi_rssi)}`}>
+                  {data.wifi_rssi} dBm {getSignalIcon(data.wifi_rssi)}
+                </span>
             </div>
         )}
       </div>
