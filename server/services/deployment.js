@@ -33,7 +33,7 @@ async function rebuildFrontend() {
  */
 async function restartBackend() {
   console.log('🔄 Restarting backend server...');
-  const { stdout, stderr } = await execPromise('pm2 restart server');
+  const { stdout, stderr } = await execPromise('pm2 restart pi-server');
   console.log('✅ Backend restarted successfully');
   return { stdout, stderr };
 }
