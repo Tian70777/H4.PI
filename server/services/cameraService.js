@@ -5,8 +5,10 @@ const path = require('path');
 const fs = require('fs').promises;
 
 /**
- * Capture photo using Pi Camera
- * @returns {Promise<string>} Path to captured photo
+ * Capture 5-second video clip using Pi Camera
+ * 
+ * @returns {Promise<string>} Path to captured video / 
+ * 
  */
 async function capturePhoto() {
   // Format timestamp in local timezone (Denmark = UTC+1)
@@ -14,32 +16,44 @@ async function capturePhoto() {
   const timestamp = new Date(now.getTime() - (now.getTimezoneOffset() * 60000))
     .toISOString()
     .replace(/[:.]/g, '-');
-  const filename = `cat_${timestamp}.jpg`;
-  const photoDir = '/home/tian/cat_photos';
-  const photoPath = path.join(photoDir, filename);
   
-  console.log('📸 Capturing photo with Pi Camera...');
+  // Changed from .jpg to .h264 for video
+  const filename = `cat_${timestamp}.h264`;
+  const videoDir = '/home/tian/cat_videos';
+  const videoPath = path.join(videoDir, filename);
+  
+  console.log('🎥 Recording 5-second video clip...');
   
   try {
     // Ensure directory exists
-    await fs.mkdir(photoDir, { recursive: true });
+    await fs.mkdir(videoDir, { recursive: true });
     
-    // Try rpicam-still first (Ubuntu 25.10+), fallback to libcamera-still (older)
-    let captureCommand = `rpicam-still -o ${photoPath} --width 1920 --height 1080 --timeout 1000 --nopreview`;
+    // rpicam-vid: Raspberry Pi's video capture command
+    //
+    // -o ${videoPath}        : Output file path / 输出文件路径
+    // --width 1280           : 720p width / 720p 宽度
+    // --height 720           : 720p height / 720p 高度
+    // -t 5000                : Duration 5000ms = 5 seconds / 持续时间 5000毫秒 = 5秒
+    // --framerate 15         : 15 frames per second (storage-friendly) / 每秒15帧（节省存储）
+    // --codec h264           : H.264 compression (hardware-accelerated) / H.264 编码（硬件加速）
+    // --nopreview            : Don't show preview window / 不显示预览窗口
+    let captureCommand = `rpicam-vid -o ${videoPath} --width 1280 --height 720 -t 5000 --framerate 15 --codec h264 --nopreview`;
     
     try {
       const { stdout, stderr } = await execPromise(captureCommand);
+      // If there are any error messages, log them as warnings
       if (stderr) console.warn('Camera stderr:', stderr);
     } catch (err) {
-      // Try old command name
-      console.log('rpicam-still not found, trying libcamera-still...');
-      captureCommand = `libcamera-still -o ${photoPath} --width 1920 --height 1080 --timeout 1000 --nopreview`;
+      // Try old command name (libcamera-vid) if rpicam-vid doesn't exist
+      
+      console.log('rpicam-vid not found, trying libcamera-vid...');
+      captureCommand = `libcamera-vid -o ${videoPath} --width 1280 --height 720 -t 5000 --framerate 15 --codec h264 --nopreview`;
       const { stdout, stderr } = await execPromise(captureCommand);
       if (stderr) console.warn('Camera stderr:', stderr);
     }
     
-    console.log('✅ Photo captured:', photoPath);
-    return photoPath;
+    console.log('✅ Video recorded:', videoPath);
+    return videoPath;
   } catch (error) {
     console.error('❌ Camera capture failed:', error);
     throw error;

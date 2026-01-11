@@ -1,7 +1,7 @@
 const mqtt = require('mqtt');
 const path = require('path');
 const { capturePhoto } = require('./cameraService');
-const { analyzeCat } = require('./catDetectionService');
+// const { analyzeCat } = require('./catDetectionService'); // DISABLED: No model yet
 const { saveDetection } = require('./databaseService');
 
 let mqttClient = null;
@@ -65,36 +65,33 @@ function initializeMQTT(io) {
  */
 async function handleMotionDetection(io) {
   try {
-    console.log('🐾 Motion detected! Starting cat detection workflow...');
+    console.log('🐾 Motion detected! Capturing photo...');
     
     // Step 1: Capture photo
     const photoPath = await capturePhoto();
     
-    // Step 2: Analyze if it's Hana
-    const analysis = await analyzeCat(photoPath);
+    // Step 2: ANALYSIS DISABLED - Just collecting photos for training dataset
+    console.log('📷 Photo saved (analysis disabled, collecting training data)');
     
-    // Step 3: Save to database
+    // Step 3: Save to database (without analysis)
     const detectionId = await saveDetection({
       photoPath: photoPath,
-      isHana: analysis.isHana,
-      confidence: analysis.confidence,
-      colorFeatures: JSON.stringify(analysis.colorFeatures)
+      isHana: null,  // Not analyzed yet
+      confidence: 0,  // No confidence score
+      colorFeatures: null
     });
     
     // Step 4: Broadcast to dashboard via WebSocket
     io.emit('cat-detection', {
       id: detectionId,
       timestamp: new Date().toISOString(),
-      isHana: analysis.isHana,
-      confidence: analysis.confidence,
-      photoUrl: `/cat-photos/${path.basename(photoPath)}`
+      isHana: null,
+      confidence: 0,
+      photoUrl: `/cat-photos/${path.basename(photoPath)}`,
+      message: 'Photo captured (analysis disabled)'
     });
     
-    if (analysis.isHana) {
-      console.log(`✅ Hana detected! Confidence: ${(analysis.confidence * 100).toFixed(1)}%`);
-    } else {
-      console.log(`❌ Not Hana (confidence: ${(analysis.confidence * 100).toFixed(1)}%)`);
-    }
+    console.log(`✅ Photo saved: ${path.basename(photoPath)}`);
     
   } catch (error) {
     console.error('❌ Motion detection workflow failed:', error);
