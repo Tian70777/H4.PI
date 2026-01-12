@@ -14,7 +14,8 @@ PubSubClient mqttClient(wifiClient);
 unsigned long lastMotionTime = 0;
 unsigned long lastStatusTime = 0;
 const unsigned long STATUS_INTERVAL = 30000; // Send status every 30 seconds
-bool motionDetected = false;
+bool motionDetected1 = false;
+bool motionDetected2 = false;
 
 void setup() {
   Serial.begin(115200);
@@ -23,7 +24,8 @@ void setup() {
   Serial.println("🐱 Hana Cat Detector Starting...");
   
   // Setup pins
-  pinMode(PIR_PIN, INPUT);
+  pinMode(PIR_PIN_1, INPUT);
+  pinMode(PIR_PIN_2, INPUT);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
   
@@ -95,31 +97,52 @@ void loop() {
     sendStatus("Heartbeat - System Active");
   }
   
-  // Read PIR sensor
-  int pirState = digitalRead(PIR_PIN);
+  // Read both PIR sensors
+  int pirState1 = digitalRead(PIR_PIN_1);
+  int pirState2 = digitalRead(PIR_PIN_2);
   
-  if (pirState == HIGH && !motionDetected) {
+  // Check if either sensor detects motion
+  if ((pirState1 == HIGH && !motionDetected1) || (pirState2 == HIGH && !motionDetected2)) {
     // Motion detected!
     unsigned long currentTime = millis();
     
     // Check cooldown (avoid spam)
     if (currentTime - lastMotionTime > MOTION_COOLDOWN) {
-      motionDetected = true;
       lastMotionTime = currentTime;
       
-      Serial.println("🐾 Motion detected!");
+      // Determine which sensor(s) triggered
+      bool sensor1 = (pirState1 == HIGH);
+      bool sensor2 = (pirState2 == HIGH);
+      
+      if (sensor1) motionDetected1 = true;
+      if (sensor2) motionDetected2 = true;
+      
+      // Print which sensor(s) detected motion
+      Serial.print("🐾 Motion detected on: ");
+      if (sensor1 && sensor2) {
+        Serial.println("BOTH sensors!");
+      } else if (sensor1) {
+        Serial.println("Sensor 1 (Pin 2)");
+      } else {
+        Serial.println("Sensor 2 (Pin 4)");
+      }
+      
       digitalWrite(LED_PIN, HIGH);
       
-      // Send MQTT message
-      sendMotionAlert();
+      // Send MQTT message with sensor info
+      sendMotionAlert(sensor1, sensor2);
       
       delay(1000);  // Keep LED on for 1 second
       digitalWrite(LED_PIN, LOW);
     }
   }
   
-  if (pirState == LOW) {
-    motionDetected = false;
+  // Reset motion flags when sensors go low
+  if (pirState1 == LOW) {
+    motionDetected1 = false;
+  }
+  if (pirState2 == LOW) {
+    motionDetected2 = false;
   }
   
   delay(100);

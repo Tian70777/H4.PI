@@ -40,7 +40,14 @@ function initializeMQTT(io) {
     console.log(`📨 MQTT message from ${topic}:`, message.toString());
     
     if (topic === 'hana/motion/detected') {
-      await handleMotionDetection(io);
+      // Parse motion data to see which sensor triggered
+      try {
+        const motionData = JSON.parse(message.toString());
+        await handleMotionDetection(io, motionData);
+      } catch (e) {
+        // Fallback for old format without JSON
+        await handleMotionDetection(io, { sensor1: true, sensor2: false, location: 'sensor1' });
+      }
     } else if (topic === 'hana/arduino/status') {
       // Log Arduino status (replaces Serial.println when Arduino is deployed)
       try {
@@ -63,22 +70,46 @@ function initializeMQTT(io) {
 /**
  * Handle motion detection workflow
  */
-async function handleMotionDetection(io) {
+async function handleMotionDetection(io, motionData = {}) {
   try {
-    console.log('🐾 Motion detected! Recording video...');
+    // Determine which sensor triggered
+    const { sensor1, sensor2, location } = motionData;
+    let triggerSource = 'Unknown';
     
-    // Step 1: Record 5-second video clip
+    if (location === 'both') {
+      triggerSource = 'Door + Window (BOTH)';
+    } else if (location === 'sensor1' || sensor1) {
+      triggerSource = 'Door (Pin 2)';
+    } else if (location === 'sensor2' || sensor2) {
+      triggerSource = 'Window (Pin 4)';
+    }
+    
+    console.log(`🐾 Motion detected from: ${triggerSource}! Recording video...`);
+    
+    // Step 1: Record 5-second video clip (triggered by EITHER or BOTH sensors)
+    // Camera locking is handled inside capturePhoto()
     const videoPath = await capturePhoto();  // Function name unchanged for compatibility
+    const videoFilename = path.basename(videoPath);
+    
+    // Check if this is a shared video (camera was busy)
+    const isSharedVideo = videoFilename !== `cat_${new Date().toISOString().replace(/[:.]/g, '-')}.h264`;
+    
+    if (isSharedVideo) {
+      console.log(`📹 Camera was busy - sharing video ${videoFilename} for ${triggerSource}`);
+    }
     
     // Step 2: ANALYSIS DISABLED - Just collecting videos for training dataset
     console.log('🎥 Video recorded (analysis disabled, collecting training data)');
     
-    // Step 3: Save to database (without analysis)
+    // Step 3: Save to database (with sensor info)
     const detectionId = await saveDetection({
       photoPath: videoPath,  // Field name unchanged for DB compatibility
       isHana: null,  // Not analyzed yet
       confidence: 0,  // No confidence score
-      colorFeatures: null
+      colorFeatures: null,
+      sensor1: sensor1 || false,
+      sensor2: sensor2 || false,
+      location: location || 'unknown'
     });
     
     // Step 4: Broadcast to dashboard via WebSocket
@@ -88,10 +119,13 @@ async function handleMotionDetection(io) {
       isHana: null,
       confidence: 0,
       photoUrl: `/cat-videos/${path.basename(videoPath)}`,
-      message: 'Video recorded (analysis disabled)'
+      message: `Video recorded from ${triggerSource}`,
+      sensor1: sensor1 || false,
+      sensor2: sensor2 || false,
+      location: location || 'unknown'
     });
     
-    console.log(`✅ Video saved: ${path.basename(videoPath)}`);
+    console.log(`✅ Video saved: ${path.basename(videoPath)} (Trigger: ${triggerSource})`);
     
   } catch (error) {
     console.error('❌ Motion detection workflow failed:', error);

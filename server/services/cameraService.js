@@ -4,13 +4,27 @@ const execPromise = util.promisify(exec);
 const path = require('path');
 const fs = require('fs').promises;
 
+// Camera lock to prevent simultaneous recordings
+let isCameraInUse = false;
+let currentRecordingPath = null;
+
 /**
  * Capture 5-second video clip using Pi Camera
+ * Includes locking mechanism to prevent conflicts
  * 
  * @returns {Promise<string>} Path to captured video / 
  * 
  */
 async function capturePhoto() {
+  // Check if camera is already recording
+  if (isCameraInUse) {
+    console.log('⏳ Camera busy! Returning current recording:', currentRecordingPath);
+    // Return the current recording path instead of starting a new one
+    return currentRecordingPath;
+  }
+  
+  // Lock the camera
+  isCameraInUse = true;
   // Format timestamp in local timezone (Denmark = UTC+1)
   const now = new Date();
   const timestamp = new Date(now.getTime() - (now.getTimezoneOffset() * 60000))
@@ -21,6 +35,9 @@ async function capturePhoto() {
   const filename = `cat_${timestamp}.h264`;
   const videoDir = '/home/tian/cat_videos';
   const videoPath = path.join(videoDir, filename);
+  
+  // Store current recording path
+  currentRecordingPath = videoPath;
   
   console.log('🎥 Recording 5-second video clip...');
   
@@ -53,9 +70,19 @@ async function capturePhoto() {
     }
     
     console.log('✅ Video recorded:', videoPath);
+    
+    // Release the camera lock
+    isCameraInUse = false;
+    currentRecordingPath = null;
+    
     return videoPath;
   } catch (error) {
     console.error('❌ Camera capture failed:', error);
+    
+    // Release lock on error too
+    isCameraInUse = false;
+    currentRecordingPath = null;
+    
     throw error;
   }
 }

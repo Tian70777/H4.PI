@@ -12,13 +12,14 @@
 extern PubSubClient mqttClient;
 
 void sendStatus(const char* msg) {
-  StaticJsonDocument<200> doc;
+  StaticJsonDocument<256> doc;
   doc["type"] = "status";
   doc["message"] = msg;
   doc["wifi_rssi"] = WiFi.RSSI();
   doc["ip"] = WiFi.localIP().toString();
+  doc["uptime"] = millis() / 1000;  // Uptime in seconds
   
-  char buffer[256];
+  char buffer[300];
   serializeJson(doc, buffer);
   
   mqttClient.publish(MQTT_TOPIC_STATUS, buffer);
@@ -26,13 +27,24 @@ void sendStatus(const char* msg) {
   Serial.println(msg);
 }
 
-void sendMotionAlert() {
-  StaticJsonDocument<200> doc;
+void sendMotionAlert(bool sensor1 = true, bool sensor2 = false) {
+  StaticJsonDocument<256> doc;
   doc["type"] = "motion";
   doc["active"] = true;
   doc["timestamp"] = millis();
+  doc["sensor1"] = sensor1;
+  doc["sensor2"] = sensor2;
   
-  char buffer[256];
+  // Add location info
+  if (sensor1 && sensor2) {
+    doc["location"] = "both";
+  } else if (sensor1) {
+    doc["location"] = "sensor1";
+  } else {
+    doc["location"] = "sensor2";
+  }
+  
+  char buffer[300];
   serializeJson(doc, buffer);
   
   mqttClient.publish(MQTT_TOPIC_MOTION, buffer);
