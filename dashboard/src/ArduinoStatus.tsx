@@ -2,7 +2,7 @@ import React from 'react';
 import './ArduinoStatus.css';
 
 interface ArduinoData {
-  msg: string;
+  message: string;
   uptime: number;
   wifi_rssi?: number;
   ip?: string;
@@ -40,7 +40,20 @@ const ArduinoStatus: React.FC<Props> = ({ data }) => {
     );
   }
 
-  const uptimeMinutes = Math.floor(data.uptime / 60);
+  // Format uptime properly
+  const uptimeSeconds = data.uptime || 0;
+  const hours = Math.floor(uptimeSeconds / 3600);
+  const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+  const seconds = uptimeSeconds % 60;
+  
+  let uptimeDisplay = '';
+  if (hours > 0) {
+    uptimeDisplay = `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    uptimeDisplay = `${minutes}m ${seconds}s`;
+  } else {
+    uptimeDisplay = `${seconds}s`;
+  }
 
   return (
     <div className="card arduino-card connected">
@@ -48,11 +61,11 @@ const ArduinoStatus: React.FC<Props> = ({ data }) => {
       <div className="arduino-grid">
         <div className="arduino-stat">
           <span className="label">Status</span>
-          <span className="value-sm">{data.msg}</span>
+          <span className="value-sm">{data.message}</span>
         </div>
         <div className="arduino-stat">
           <span className="label">Uptime</span>
-          <span className="value-sm">{uptimeMinutes}m</span>
+          <span className="value-sm">{uptimeDisplay}</span>
         </div>
         {data.ip && (
           <div className="arduino-stat">

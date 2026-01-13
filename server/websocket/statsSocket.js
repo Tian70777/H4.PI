@@ -26,7 +26,7 @@ function initializeStatsSocket(io) {
     const stats = await getSystemStats();
     if (stats) {
       io.emit('stats', stats);
-      console.log('📊 Broadcasted stats to all clients');
+      // console.log('📊 Broadcasted stats to all clients');  // Reduced logging spam
     }
   }, 2000);
 

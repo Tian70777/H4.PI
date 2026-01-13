@@ -15,7 +15,7 @@ interface SystemData {
 }
 
 interface ArduinoData {
-    msg: string;
+    message: string;
     uptime: number;
     wifi_rssi?: number;
     ip?: string;

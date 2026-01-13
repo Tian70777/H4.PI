@@ -21,12 +21,15 @@ app.use('/cat-photos', express.static('/home/tian/cat_photos'));
 
 const server = http.createServer(app);
 
-// Setup Socket.io (WebSocket)
+// Setup Socket.io (WebSocket) with keepalive settings
 const io = new Server(server, {
   cors: {
     origin: "*", // Allow any origin (React app) to connect
     methods: ["GET", "POST"]
-  }
+  },
+  pingTimeout: 60000,    // Wait 60s for pong before considering connection dead
+  pingInterval: 25000,   // Send ping every 25s to keep connection alive
+  connectTimeout: 45000  // Max time to wait for initial connection
 });
 
 const PORT = process.env.PORT || 5000;

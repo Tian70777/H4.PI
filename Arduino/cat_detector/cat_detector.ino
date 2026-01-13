@@ -63,6 +63,8 @@ void loop() {
   // Check WiFi connection first (most critical)
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("⚠️ WiFi lost! Reconnecting continuously until found...");
+    Serial.print("WiFi disconnect reason: ");
+    Serial.println(WiFi.status());
     digitalWrite(LED_PIN, HIGH); // LED on during reconnect
     
     // Keep trying forever until WiFi is restored
