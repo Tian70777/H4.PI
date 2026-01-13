@@ -4,30 +4,7 @@ import './App.css'
 import Sidebar from './Sidebar';
 import ServerView from './ServerView';
 import ArduinoView from './ArduinoView';
-
-interface SystemData {
-  load: string;
-  temperature: string;
-  memoryUsage: string;
-  totalMemory: string;
-  ipAddress: string;
-  uptime: string;
-}
-
-interface ArduinoData {
-    message: string;
-    uptime: number;
-    wifi_rssi?: number;
-    ip?: string;
-}
-
-interface CatDetection {
-  id: number;
-  timestamp: string;
-  isHana: boolean;
-  confidence: number;
-  photoUrl: string;
-}
+import { SystemData, ArduinoData, CatDetection } from './types';
 
 // Auto-detect the Pi's address from the current URL
 // Works with IP addresses (10.101.40.181) or hostnames (tianserver01.local)

@@ -1,13 +1,6 @@
 import React from 'react';
 import './ArduinoStatus.css';
-
-interface ArduinoData {
-  message: string;
-  uptime: number;
-  wifi_rssi?: number;
-  ip?: string;
-  timestamp?: number;
-}
+import { ArduinoData } from './types';
 
 interface Props {
   data: ArduinoData | null;
