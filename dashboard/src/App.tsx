@@ -54,16 +54,21 @@ function App() {
       setConnected(false);
     });
 
-    // Check for stale Arduino status every 10 seconds
+    // Cleanup on component unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, []); // ← Empty dependency array - only run once on mount!
+
+  // Separate useEffect for stale check (doesn't recreate socket)
+  useEffect(() => {
     const staleCheckInterval = setInterval(() => {
       if (arduinoLastUpdate && (Date.now() - arduinoLastUpdate.getTime() > 60000)) {
         console.warn('Arduino status is stale (>60s old)');
       }
     }, 10000);
 
-    // Cleanup on component unmount
     return () => {
-      socket.disconnect();
       clearInterval(staleCheckInterval);
     };
   }, [arduinoLastUpdate]);

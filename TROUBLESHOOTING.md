@@ -809,6 +809,129 @@ ReferenceError: path is not defined
 
 ---
 
+## Auto-Deployment Issues
+
+### Issue: TypeScript Compilation Fails During GitHub Webhook Deployment
+**Problem:** Automatic deployment fails with TypeScript errors after pushing code changes
+
+**Symptoms:**
+```
+❌ Background deployment failed: Error: Command failed: cd /home/tian/H4.PI/dashboard && npm run build
+error TS2719: Type 'ArduinoData | null' is not assignable to type 'ArduinoData | null'
+Property 'msg' is missing in type 'ArduinoData' but required in type 'ArduinoData'
+```
+
+- PM2 server keeps running with OLD code
+- Dashboard works but doesn't update after git push
+- Webhook triggers but build step fails
+- Console shows "Frontend files changed, rebuilding..." but ends in error
+
+**Root Cause:** TypeScript sees duplicate interface definitions across multiple files
+
+**Problem Pattern:**
+```typescript
+// ❌ BAD: Duplicate definitions
+// App.tsx
+interface ArduinoData {
+  message: string;
+  uptime: number;
+}
+
+// ArduinoStatus.tsx
+interface ArduinoData {
+  message: string;
+  uptime: number;
+}
+
+// ArduinoView.tsx
+interface ArduinoData {
+  msg: string;  // ← Field name mismatch!
+  uptime: number;
+}
+```
+
+TypeScript with `verbatimModuleSyntax` enabled treats each definition as a separate type, causing conflicts.
+
+**Solution:**
+1. **Create shared types file:**
+```typescript
+// dashboard/src/types.ts
+export interface SystemData {
+  load: string;
+  temperature: string;
+  memoryUsage: string;
+  totalMemory: string;
+  ipAddress: string;
+  uptime: string;
+}
+
+export interface ArduinoData {
+  message: string;  // Match what Arduino sends via MQTT
+  uptime: number;
+  wifi_rssi?: number;
+  ip?: string;
+}
+
+export interface CatDetection {
+  id: number;
+  timestamp: string;
+  isHana: boolean;
+  confidence: number;
+  photoUrl: string;
+}
+```
+
+2. **Import types using `import type` syntax:**
+```typescript
+// ✅ GOOD: Use shared types
+// App.tsx
+import type { SystemData, ArduinoData, CatDetection } from './types';
+
+// ArduinoStatus.tsx
+import type { ArduinoData } from './types';
+
+// ArduinoView.tsx
+import type { ArduinoData, CatDetection } from './types';
+```
+
+3. **Update all field references:**
+```typescript
+// Update all instances of data.msg to data.message
+<p className="status-info">{data.message}</p>
+```
+
+**Verification:**
+```bash
+# Check for remaining duplicate definitions
+cd dashboard/src
+grep -r "interface ArduinoData" --include="*.tsx" --include="*.ts"
+# Should only appear in types.ts
+
+# Verify field usage
+grep -r "data\.msg\b" --include="*.tsx"
+# Should return no results
+
+# Test build locally
+cd dashboard
+npm run build
+# Should succeed without errors
+```
+
+**After fixing:**
+- Commit and push changes
+- Webhook triggers automatically
+- Build succeeds: `✅ Frontend rebuilt successfully`
+- Dashboard updates with new code
+- PM2 restarts server automatically
+
+**Key Learnings:**
+- Use a single source of truth for TypeScript types
+- Use `import type` for type-only imports when `verbatimModuleSyntax` is enabled
+- Match interface field names to actual data received from backend/MQTT
+- Test `npm run build` locally before pushing to catch TypeScript errors early
+
+---
+
 ## Contact & Resources
 
 **Project Structure:**
