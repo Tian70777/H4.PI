@@ -1,22 +1,6 @@
 import React from 'react';
 import './ArduinoView.css';
-
-interface ArduinoData {
-  msg: string;
-  uptime: number;
-  wifi_rssi?: number;
-  ip?: string;
-  type?: string;
-  active?: boolean;
-}
-
-interface CatDetection {
-  id: number;
-  timestamp: string;
-  isHana: boolean;
-  confidence: number;
-  photoUrl: string;
-}
+import type { ArduinoData, CatDetection } from './types';
 
 interface Props {
   data: ArduinoData | null;
@@ -64,7 +48,7 @@ const ArduinoView: React.FC<Props> = ({ data, lastUpdate, detections }) => {
             <span className={`status-dot ${isOnline ? 'online' : 'offline'}`}></span>
             <span>{isOnline ? 'ONLINE' : 'OFFLINE'}</span>
           </div>
-          <p className="status-info">{data.msg}</p>
+          <p className="status-info">{data.message}</p>
         </div>
 
         <div className="status-card">
