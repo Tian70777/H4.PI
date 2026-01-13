@@ -1,6 +1,6 @@
 import React from 'react';
 import './ArduinoStatus.css';
-import { ArduinoData } from './types';
+import type { ArduinoData } from './types';
 
 interface Props {
   data: ArduinoData | null;
