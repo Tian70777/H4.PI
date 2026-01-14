@@ -99,8 +99,21 @@ async function handleMotionDetection(io, motionData = {}) {
     }
     
     // Step 2: Analyze video with trained TFLite model
-    const analysis = await analyzeCat(videoPath);
-    console.log(`🔍 Analysis: ${analysis.isHana ? 'Hana detected!' : 'No Hana'} (${(analysis.confidence * 100).toFixed(1)}% confidence)`);
+    let analysis;
+    try {
+      analysis = await analyzeCat(videoPath);
+      console.log(`🔍 Analysis: ${analysis.isHana ? 'Hana detected!' : 'No Hana'} (${(analysis.confidence * 100).toFixed(1)}% confidence)`);
+    } catch (error) {
+      console.error(`❌ Analysis failed for ${triggerSource}:`, error.message);
+      // Broadcast error to dashboard
+      io.emit('detection-error', {
+        timestamp: new Date().toISOString(),
+        message: `Detection analysis failed: ${error.message}`,
+        trigger: triggerSource,
+        videoPath: path.basename(videoPath)
+      });
+      return; // Don't save to database if analysis fails
+    }
     
     // Step 3: Save to database (with sensor info)
     const detectionId = await saveDetection({

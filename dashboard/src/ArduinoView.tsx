@@ -6,9 +6,10 @@ interface Props {
   data: ArduinoData | null;
   lastUpdate: Date | null;
   detections: CatDetection[];
+  errors?: string[];
 }
 
-const ArduinoView: React.FC<Props> = ({ data, lastUpdate, detections }) => {
+const ArduinoView: React.FC<Props> = ({ data, lastUpdate, detections, errors = [] }) => {
   const SOCKET_URL = `http://${window.location.hostname || 'localhost'}:5000`;
   if (!data) {
     return (
@@ -108,6 +109,19 @@ const ArduinoView: React.FC<Props> = ({ data, lastUpdate, detections }) => {
           <li><strong>Heartbeat:</strong> Every 30 seconds</li>
         </ul>
       </div>
+
+      {errors.length > 0 && (
+        <div className="error-log">
+          <h3>⚠️ Detection Errors</h3>
+          <div className="error-list">
+            {errors.map((error, idx) => (
+              <div key={idx} className="error-item">
+                {error}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="detection-gallery">
         <h3>Recent Detections</h3>

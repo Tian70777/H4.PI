@@ -94,19 +94,8 @@ async function runPythonAnalysis(videoPath) {
   } catch (error) {
     console.error('❌ Python analysis failed:', error.message);
     
-    // Fallback to mock data if Python fails (for development)
-    console.warn('⚠️ Using fallback mock detection');
-    const mockConfidence = Math.random() * 0.5 + 0.5;
-    
-    return {
-      isHana: mockConfidence > 0.7,
-      confidence: mockConfidence,
-      detectionCount: 0,
-      percentage: 0,
-      framesAnalyzed: 0,
-      error: error.message,
-      timestamp: new Date().toISOString()
-    };
+    // Don't save detection if analysis fails - throw error
+    throw new Error(`Cat detection failed: ${error.message}`);
   }
 }
 

@@ -58,14 +58,16 @@ def main():
         is_video = Path(photo_path).suffix.lower() in video_extensions
         
         if is_video:
-            # Video analysis
-            result = detector.analyze_video(photo_path, sample_rate=15)
+            # Video analysis with 50% threshold
+            result = detector.analyze_video(photo_path, sample_rate=15, confidence_threshold=0.5)
+            hana_confidence = result['max_confidence'] if result['hana_detected'] else 0.0
+            
             detection_result = {
-                "class": "hana" if result['hana_detected'] else "no_cat",
-                "confidence": result['max_confidence'],
+                "class": "hana" if hana_confidence > 0.5 else "no_cat",
+                "confidence": hana_confidence,  # Always show hana probability
                 "probabilities": {
-                    "hana": result['max_confidence'],
-                    "no_cat": 1.0 - result['max_confidence']
+                    "hana": hana_confidence,
+                    "no_cat": 1.0 - hana_confidence
                 },
                 "video_analysis": {
                     "hana_percentage": result['hana_percentage'],
@@ -74,16 +76,18 @@ def main():
                 }
             }
         else:
-            # Image analysis
+            # Image analysis with 50% threshold
             import cv2
             frame = cv2.imread(photo_path)
             if frame is None:
                 raise ValueError(f"Cannot read image: {photo_path}")
             
             result = detector.predict_frame(frame)
+            hana_prob = result['probabilities'].get('hana', 0.0)
+            
             detection_result = {
-                "class": result['class'],
-                "confidence": result['confidence'],
+                "class": "hana" if hana_prob > 0.5 else "no_cat",
+                "confidence": hana_prob,  # Always show hana probability
                 "probabilities": result['probabilities']
             }
         

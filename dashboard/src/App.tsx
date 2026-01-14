@@ -20,6 +20,7 @@ function App() {
   const [activeTab, setActiveTab] = useState<'server' | 'arduino' | 'history'>('server');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [catDetections, setCatDetections] = useState<CatDetection[]>([]);
+  const [detectionErrors, setDetectionErrors] = useState<string[]>([]);
 
   useEffect(() => {
     // Create WebSocket connection to server
@@ -47,6 +48,13 @@ function App() {
     socket.on('cat-detection', (detection: CatDetection) => {
         console.log('Cat detection:', detection);
         setCatDetections(prev => [detection, ...prev].slice(0, 10)); // Keep last 10
+    });
+
+    // Listen for detection errors
+    socket.on('detection-error', (error: any) => {
+        console.error('Detection error:', error);
+        const errorMsg = `${new Date(error.timestamp).toLocaleTimeString()}: ${error.message} (${error.trigger})`;
+        setDetectionErrors(prev => [errorMsg, ...prev].slice(0, 5)); // Keep last 5
     });
 
     // Handle disconnection
@@ -101,7 +109,7 @@ function App() {
         {activeTab === 'server' ? (
           <ServerView data={data} />
         ) : activeTab === 'arduino' ? (
-          <ArduinoView data={arduinoData} lastUpdate={arduinoLastUpdate} detections={catDetections} />
+          <ArduinoView data={arduinoData} lastUpdate={arduinoLastUpdate} detections={catDetections} errors={detectionErrors} />
         ) : (
           <HistoryView serverUrl={SOCKET_URL} />
         )}
