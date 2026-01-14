@@ -64,12 +64,16 @@ function createTables() {
  */
 function saveDetection({ photoPath, isHana, confidence, colorFeatures, sensor1, sensor2, location }) {
   return new Promise((resolve, reject) => {
+    // Use UTC timestamp to match video filename timestamps
+    const utcTimestamp = new Date().toISOString();
+    
     const query = `
-      INSERT INTO detections (is_hana, confidence, photo_path, color_features, sensor1, sensor2, location)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO detections (timestamp, is_hana, confidence, photo_path, color_features, sensor1, sensor2, location)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     db.run(query, [
+      utcTimestamp,
       isHana ? 1 : 0, 
       confidence, 
       photoPath, 

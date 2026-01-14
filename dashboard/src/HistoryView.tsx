@@ -62,7 +62,19 @@ export default function HistoryView({ serverUrl }: HistoryViewProps) {
       }
       
       const data = await response.json();
-      setDetections(data.detections);
+      
+      // Deduplicate: Keep only the first detection for each video file
+      const seenVideos = new Set<string>();
+      const uniqueDetections = data.detections.filter((detection: Detection) => {
+        const videoFilename = detection.photo_path.split('/').pop();
+        if (seenVideos.has(videoFilename || '')) {
+          return false; // Skip duplicate video
+        }
+        seenVideos.add(videoFilename || '');
+        return true;
+      });
+      
+      setDetections(uniqueDetections);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load detections');
       console.error('Failed to fetch detections:', err);
