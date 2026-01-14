@@ -31,8 +31,8 @@ async function capturePhoto() {
     .toISOString()
     .replace(/[:.]/g, '-');
   
-  // Changed from .jpg to .h264 for video
-  const filename = `cat_${timestamp}.h264`;
+  // Changed from .jpg to .mp4 for browser-compatible video
+  const filename = `cat_${timestamp}.mp4`;
   const videoDir = '/home/tian/cat_videos';
   const videoPath = path.join(videoDir, filename);
   
@@ -54,7 +54,8 @@ async function capturePhoto() {
     // --framerate 15         : 15 frames per second (storage-friendly) / 每秒15帧（节省存储）
     // --codec h264           : H.264 compression (hardware-accelerated) / H.264 编码（硬件加速）
     // --nopreview            : Don't show preview window / 不显示预览窗口
-    let captureCommand = `rpicam-vid -o ${videoPath} --width 1280 --height 720 -t 5000 --framerate 15 --codec h264 --nopreview`;
+    // --save-pts timestamps.txt : Save frame timestamps for MP4 container
+    let captureCommand = `rpicam-vid -o ${videoPath} --width 1280 --height 720 -t 5000 --framerate 15 --codec h264 --save-pts timestamps.txt --nopreview`;
     
     try {
       const { stdout, stderr } = await execPromise(captureCommand);
@@ -64,7 +65,7 @@ async function capturePhoto() {
       // Try old command name (libcamera-vid) if rpicam-vid doesn't exist
       
       console.log('rpicam-vid not found, trying libcamera-vid...');
-      captureCommand = `libcamera-vid -o ${videoPath} --width 1280 --height 720 -t 5000 --framerate 15 --codec h264 --nopreview`;
+      captureCommand = `libcamera-vid -o ${videoPath} --width 1280 --height 720 -t 5000 --framerate 15 --codec h264 --save-pts timestamps.txt --nopreview`;
       const { stdout, stderr } = await execPromise(captureCommand);
       if (stderr) console.warn('Camera stderr:', stderr);
     }
