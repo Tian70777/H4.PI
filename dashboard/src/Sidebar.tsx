@@ -2,8 +2,8 @@ import React from 'react';
 import './Sidebar.css';
 
 interface Props {
-  activeTab: 'server' | 'arduino';
-  onTabChange: (tab: 'server' | 'arduino') => void;
+  activeTab: 'server' | 'arduino' | 'history';
+  onTabChange: (tab: 'server' | 'arduino' | 'history') => void;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -33,6 +33,14 @@ const Sidebar: React.FC<Props> = ({ activeTab, onTabChange, isOpen, onClose }) =
         >
           <span className="icon">🤖</span>
           <span className="label">Arduino Sensor</span>
+        </button>
+
+        <button
+          className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
+          onClick={() => onTabChange('history')}
+        >
+          <span className="icon">📊</span>
+          <span className="label">Detection History</span>
         </button>
       </nav>
     </div>

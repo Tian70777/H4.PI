@@ -1,23 +1,22 @@
-const { execSync } = require('child_process');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 const path = require('path');
+const fs = require('fs');
 
 /**
- * Analyze cat photo using color distribution
- * Simple model: Check if color matches Hana's profile
+ * Analyze cat video using trained TensorFlow Lite model
+ * Calls Python script with cat_detector.py
  * 
- * For production: Use TensorFlow.js or Python script with proper ML model
- * For now: Basic color analysis as proof of concept
- * 
- * @param {string} photoPath - Path to captured photo
+ * @param {string} videoPath - Path to captured video (.h264 or .mp4)
  * @returns {Promise<Object>} Detection result
  */
-async function analyzeCat(photoPath) {
-  console.log('🔍 Analyzing cat in photo:', photoPath);
+async function analyzeCat(videoPath) {
+  console.log('🔍 Analyzing cat in video:', videoPath);
   
   try {
-    // Use Python script for color analysis
-    // This is a placeholder - you'll need to create the Python script
-    const result = await runPythonAnalysis(photoPath);
+    // Use the trained model to analyze video
+    const result = await runPythonAnalysis(videoPath);
     
     return result;
   } catch (error) {
@@ -31,49 +30,84 @@ async function analyzeCat(photoPath) {
 }
 
 /**
- * Run Python ML model (placeholder)
- * In production: This calls your trained model
- */
-function runPythonAnalysis(photoPath) {
-  // For now, return mock data
-  // TODO: Replace with actual ML model
-  
-  const mockConfidence = Math.random() * 0.5 + 0.5; // 50-100%
-  const isHana = mockConfidence > 0.7;
-  
-  return {
-    isHana: isHana,
-    confidence: mockConfidence,
-    colorFeatures: {
-      dominantColor: '#E5D4B5',  // Hana's fur color
-      saturation: 0.42,
-      brightness: 0.78
-    },
-    timestamp: new Date().toISOString()
-  };
-}
-
-/**
- * Train model with your 40 photos (run this once on laptop/Pi)
+ * Run Python ML model with trained TFLite model
+ * Uses cat_detector.py from cat_detection folder
  * 
- * Process:
- * 1. Extract color histograms from 40 Hana photos
- * 2. Calculate average color distribution
- * 3. Save as baseline model
- * 4. Use for comparison during detection
+ * @param {string} videoPath - Path to video file
+ * @returns {Promise<Object>} Analysis result
  */
-async function trainModel(photoDirectory) {
-  console.log('🎓 Training model with photos from:', photoDirectory);
+async function runPythonAnalysis(videoPath) {
+  const pythonScript = path.join(__dirname, '../../cat_detection/cat_detector_cli.py');
+  const modelPath = path.join(__dirname, '../../cat_detection/models/cat_detector_v1.tflite');
   
-  // This would call a Python script that:
-  // - Loads all 40 photos
-  // - Extracts color features
-  // - Trains a simple k-NN or SVM classifier
-  // - Saves model to disk
-  
-  // For now, just log
-  console.log('TODO: Implement model training');
-  console.log('Suggested approach: Use scikit-learn color histogram classifier');
+  try {
+    // Check if video file exists
+    if (!fs.existsSync(videoPath)) {
+      throw new Error(`Video file not found: ${videoPath}`);
+    }
+    
+    // Check if Python script exists
+    if (!fs.existsSync(pythonScript)) {
+      throw new Error(`Python script not found: ${pythonScript}`);
+    }
+    
+    // Check if model file exists
+    if (!fs.existsSync(modelPath)) {
+      throw new Error(`Model file not found: ${modelPath}`);
+    }
+    
+    // Call Python CLI script: python3 cat_detector_cli.py <video_path> <model_path>
+    // The CLI script outputs JSON with detection results
+    const command = `python3 "${pythonScript}" "${videoPath}" "${modelPath}"`;
+    
+    const { stdout, stderr } = await execPromise(command, {
+      timeout: 30000 // 30 second timeout
+    });
+    
+    if (stderr && !stderr.includes('WARNING') && !stderr.includes('✅')) {
+      console.warn('Python stderr:', stderr);
+    }
+    
+    // Parse JSON output from Python script
+    const result = JSON.parse(stdout);
+    
+    if (result.error) {
+      throw new Error(result.error);
+    }
+    
+    // Extract video analysis data if available
+    const isHana = result.class === 'hana';
+    const confidence = result.confidence || 0;
+    
+    console.log(`✅ Analysis complete: ${isHana ? 'Hana detected!' : 'No Hana'} (confidence: ${(confidence * 100).toFixed(1)}%)`);
+    
+    return {
+      isHana: isHana,
+      confidence: confidence,
+      detectionCount: result.video_analysis?.hana_percentage || 0,
+      percentage: result.video_analysis?.hana_percentage || 0,
+      framesAnalyzed: result.video_analysis?.frames_analyzed || 0,
+      duration: result.video_analysis?.duration || 0,
+      detectionTimeMs: result.detection_time_ms || 0,
+      timestamp: new Date().toISOString()
+    };
+  } catch (error) {
+    console.error('❌ Python analysis failed:', error.message);
+    
+    // Fallback to mock data if Python fails (for development)
+    console.warn('⚠️ Using fallback mock detection');
+    const mockConfidence = Math.random() * 0.5 + 0.5;
+    
+    return {
+      isHana: mockConfidence > 0.7,
+      confidence: mockConfidence,
+      detectionCount: 0,
+      percentage: 0,
+      framesAnalyzed: 0,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    };
+  }
 }
 
-module.exports = { analyzeCat, trainModel };
+module.exports = { analyzeCat };

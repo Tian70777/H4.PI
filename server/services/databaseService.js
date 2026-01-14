@@ -35,7 +35,10 @@ function createTables() {
           is_hana BOOLEAN NOT NULL,
           confidence REAL NOT NULL,
           photo_path TEXT NOT NULL,
-          color_features TEXT
+          color_features TEXT,
+          sensor1 BOOLEAN DEFAULT 0,
+          sensor2 BOOLEAN DEFAULT 0,
+          location TEXT
         )
       `, (err) => {
         if (err) reject(err);
@@ -59,14 +62,22 @@ function createTables() {
 /**
  * Save detection event
  */
-function saveDetection({ photoPath, isHana, confidence, colorFeatures }) {
+function saveDetection({ photoPath, isHana, confidence, colorFeatures, sensor1, sensor2, location }) {
   return new Promise((resolve, reject) => {
     const query = `
-      INSERT INTO detections (is_hana, confidence, photo_path, color_features)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO detections (is_hana, confidence, photo_path, color_features, sensor1, sensor2, location)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     
-    db.run(query, [isHana ? 1 : 0, confidence, photoPath, colorFeatures], function(err) {
+    db.run(query, [
+      isHana ? 1 : 0, 
+      confidence, 
+      photoPath, 
+      colorFeatures,
+      sensor1 ? 1 : 0,
+      sensor2 ? 1 : 0,
+      location || 'unknown'
+    ], function(err) {
       if (err) {
         console.error('❌ Failed to save detection:', err);
         reject(err);

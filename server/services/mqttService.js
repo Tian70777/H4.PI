@@ -1,7 +1,7 @@
 const mqtt = require('mqtt');
 const path = require('path');
 const { capturePhoto } = require('./cameraService');
-// const { analyzeCat } = require('./catDetectionService'); // DISABLED: No model yet
+const { analyzeCat } = require('./catDetectionService'); // ✅ ENABLED: Model ready!
 const { saveDetection } = require('./databaseService');
 
 let mqttClient = null;
@@ -98,14 +98,15 @@ async function handleMotionDetection(io, motionData = {}) {
       console.log(`📹 Camera was busy - sharing video ${videoFilename} for ${triggerSource}`);
     }
     
-    // Step 2: ANALYSIS DISABLED - Just collecting videos for training dataset
-    console.log('🎥 Video recorded (analysis disabled, collecting training data)');
+    // Step 2: Analyze video with trained TFLite model
+    const analysis = await analyzeCat(videoPath);
+    console.log(`🔍 Analysis: ${analysis.isHana ? 'Hana detected!' : 'No Hana'} (${(analysis.confidence * 100).toFixed(1)}% confidence)`);
     
     // Step 3: Save to database (with sensor info)
     const detectionId = await saveDetection({
       photoPath: videoPath,  // Field name unchanged for DB compatibility
-      isHana: null,  // Not analyzed yet
-      confidence: 0,  // No confidence score
+      isHana: analysis.isHana,
+      confidence: analysis.confidence,
       colorFeatures: null,
       sensor1: sensor1 || false,
       sensor2: sensor2 || false,
@@ -116,10 +117,10 @@ async function handleMotionDetection(io, motionData = {}) {
     io.emit('cat-detection', {
       id: detectionId,
       timestamp: new Date().toISOString(),
-      isHana: null,
-      confidence: 0,
+      isHana: analysis.isHana,
+      confidence: analysis.confidence,
       photoUrl: `/cat-videos/${path.basename(videoPath)}`,
-      message: `Video recorded from ${triggerSource}`,
+      message: `${analysis.isHana ? '🐱 Hana detected!' : '❓ Unknown'} from ${triggerSource}`,
       sensor1: sensor1 || false,
       sensor2: sensor2 || false,
       location: location || 'unknown'

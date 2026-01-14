@@ -4,6 +4,7 @@ import './App.css'
 import Sidebar from './Sidebar';
 import ServerView from './ServerView';
 import ArduinoView from './ArduinoView';
+import HistoryView from './HistoryView';
 import type { SystemData, ArduinoData, CatDetection } from './types';
 
 // Auto-detect the Pi's address from the current URL
@@ -16,7 +17,7 @@ function App() {
   const [arduinoData, setArduinoData] = useState<ArduinoData | null>(null);
   const [arduinoLastUpdate, setArduinoLastUpdate] = useState<Date | null>(null);
   const [connected, setConnected] = useState(false);
-  const [activeTab, setActiveTab] = useState<'server' | 'arduino'>('server');
+  const [activeTab, setActiveTab] = useState<'server' | 'arduino' | 'history'>('server');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [catDetections, setCatDetections] = useState<CatDetection[]>([]);
 
@@ -99,8 +100,10 @@ function App() {
 
         {activeTab === 'server' ? (
           <ServerView data={data} />
-        ) : (
+        ) : activeTab === 'arduino' ? (
           <ArduinoView data={arduinoData} lastUpdate={arduinoLastUpdate} detections={catDetections} />
+        ) : (
+          <HistoryView serverUrl={SOCKET_URL} />
         )}
       </div>
     </div>
