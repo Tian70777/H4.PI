@@ -63,7 +63,7 @@ export default function HistoryView({ serverUrl }: HistoryViewProps) {
       
       const data = await response.json();
       
-      // Deduplicate: Keep only the first detection for each video file
+      // Deduplicate shared videos only (keep all confidence levels)
       const seenVideos = new Set<string>();
       const uniqueDetections = data.detections.filter((detection: Detection) => {
         const videoFilename = detection.photo_path.split('/').pop();
