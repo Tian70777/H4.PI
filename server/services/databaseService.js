@@ -1,7 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, '../../data/cat_detections.db');
+const DB_PATH = '/home/tian/cat_data.db';
 let db = null;
 
 /**

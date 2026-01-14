@@ -41,9 +41,11 @@ class CatDetector:
         else:
             self.class_names = ['hana', 'no_cat']  # Default
         
-        print(f"✅ Cat detector loaded!")
-        print(f"   Model: {self.model_path.name}")
-        print(f"   Classes: {self.class_names}")
+        # Print to stderr to avoid corrupting JSON output
+        import sys
+        print(f"✅ Cat detector loaded!", file=sys.stderr)
+        print(f"   Model: {self.model_path.name}", file=sys.stderr)
+        print(f"   Classes: {self.class_names}", file=sys.stderr)
     
     def preprocess_frame(self, frame):
         """Preprocess frame for model input"""
