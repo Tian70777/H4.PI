@@ -72,6 +72,41 @@ async function capturePhoto() {
     
     console.log('✅ Video recorded:', videoPath);
     
+    // Convert H.264 to proper MP4 container for browser compatibility
+    console.log('🔄 Starting MP4 conversion...');
+    const tempH264 = videoPath.replace('.mp4', '.h264');
+    
+    try {
+      // Rename to .h264 temporarily
+      console.log(`📝 Renaming ${videoPath} to ${tempH264}`);
+      await fs.rename(videoPath, tempH264);
+      
+      // Convert to MP4 container using ffmpeg
+      const convertCmd = `ffmpeg -i "${tempH264}" -c copy "${videoPath}" -y 2>&1`;
+      console.log(`🎬 Running: ${convertCmd}`);
+      const { stdout, stderr } = await execPromise(convertCmd);
+      
+      if (stderr && stderr.includes('error')) {
+        throw new Error(stderr);
+      }
+      
+      console.log('✅ Converted to MP4 container');
+      
+      // Delete temp h264 file
+      await fs.unlink(tempH264);
+      console.log('🗑️ Deleted temp H.264 file');
+    } catch (convErr) {
+      console.error('❌ MP4 conversion failed:', convErr.message);
+      console.error('Full error:', convErr);
+      // Restore original file if conversion fails
+      try {
+        await fs.rename(tempH264, videoPath);
+        console.warn('⚠️ Restored original H.264 file');
+      } catch (restoreErr) {
+        console.error('❌ Failed to restore file:', restoreErr.message);
+      }
+    }
+    
     // Release the camera lock
     isCameraInUse = false;
     currentRecordingPath = null;
