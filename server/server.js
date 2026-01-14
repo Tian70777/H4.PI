@@ -18,6 +18,8 @@ app.use(express.json()); // Parse JSON request bodies
 
 // Serve cat photos
 app.use('/cat-photos', express.static('/home/tian/cat_photos'));
+// Serve cat videos
+app.use('/cat-videos', express.static('/home/tian/cat_videos'));
 
 const server = http.createServer(app);
 
