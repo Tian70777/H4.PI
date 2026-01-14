@@ -39,7 +39,7 @@ const Sidebar: React.FC<Props> = ({ activeTab, onTabChange, isOpen, onClose }) =
           className={`nav-item ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => onTabChange('history')}
         >
-          <span className="icon">📊</span>
+          <span className="icon">�</span>
           <span className="label">Detection History</span>
         </button>
       </nav>
