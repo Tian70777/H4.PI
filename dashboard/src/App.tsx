@@ -85,11 +85,9 @@ function App() {
   return (
     <div className="dashboard">
       <div className="scanlines"></div>
-      {!sidebarOpen && (
-        <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(true)}>
-          ☰
-        </button>
-      )}
+      <button className="sidebar-toggle-btn" onClick={() => setSidebarOpen(!sidebarOpen)}>
+        {sidebarOpen ? '×' : '☰'}
+      </button>
       <Sidebar 
         activeTab={activeTab} 
         onTabChange={setActiveTab}
