@@ -58,16 +58,17 @@ def main():
         is_video = Path(photo_path).suffix.lower() in video_extensions
         
         if is_video:
-            # Video analysis with 50% threshold
+            # Video analysis - check multiple frames with 50% threshold
             result = detector.analyze_video(photo_path, sample_rate=15, confidence_threshold=0.5)
-            hana_confidence = result['max_confidence'] if result['hana_detected'] else 0.0
             
+            # Rule: If ANY frame shows ≥50% Hana, classify entire video as Hana
+            # hana_detected = True means at least 1 frame had ≥50% confidence
             detection_result = {
-                "class": "hana" if hana_confidence > 0.5 else "no_cat",
-                "confidence": hana_confidence,  # Always show hana probability
+                "class": "hana" if result['hana_detected'] else "no_cat",
+                "confidence": result['max_confidence'],  # Max confidence from Hana frames
                 "probabilities": {
-                    "hana": hana_confidence,
-                    "no_cat": 1.0 - hana_confidence
+                    "hana": result['max_confidence'],
+                    "no_cat": 1.0 - result['max_confidence']
                 },
                 "video_analysis": {
                     "hana_percentage": result['hana_percentage'],
