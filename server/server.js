@@ -57,6 +57,6 @@ initializeMQTT(io);
 server.listen(PORT, '0.0.0.0', () => {
   console.log('🚀 Server running on port', PORT);
   console.log('📡 WebSocket endpoint: ws://localhost:' + PORT);
-  console.log('🌐 Access from network: ws://<your-pi-ip>:' + PORT);
+  console.log('🌐 Access from network: ws://<your-raspberry-pi-ip>:' + PORT);
   console.log('🔗 Webhook endpoint: http://localhost:' + PORT + '/api/webhook');
 });
